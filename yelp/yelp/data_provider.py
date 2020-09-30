@@ -1,27 +1,14 @@
 import json
-import re
 from bs4 import BeautifulSoup
 from .util import KeysForJsonDict as Key
 
 
-def clear_script_string(st: str):
-   start_index = st.find('{')
-   end_index = st.rfind('}')
-   if start_index == -1 or end_index == -1:
-      return None
-   return st[start_index:end_index+1]
-
-
-def get_script_data_from_(response_text):
-    bs_obj = BeautifulSoup(markup=response_text,
-                           features='html.parser')
-    body = bs_obj.find('body')
-    return body.find(name='script',
-                     attrs={'type': 'application/json',
-                            'data-hypernova-key': True})
-
-
-def make_dict_from_(response_text):
+def get_dict_from_scriptjson(response_text):
+    """
+    Create dictionary from json-script-data
+    :param response_text: str
+    :return dict or None
+    """
     script_data = get_script_data_from_(response_text)
     try:
         app_script_text = str(script_data.contents[0].string.extract())
@@ -37,7 +24,39 @@ def make_dict_from_(response_text):
             return None
 
 
+def get_script_data_from_(response_text):
+    """
+    Create BeautifulSoup-object and find script-element
+    :param response_text: str
+    :return bs-element
+    """
+    bs_obj = BeautifulSoup(markup=response_text,
+                           features='html.parser')
+    body = bs_obj.find('body')
+    return body.find(name='script',
+                     attrs={'type': 'application/json',
+                            'data-hypernova-key': True})
+
+
+def clear_script_string(script_data: str):
+   """
+   Return script data from first scope to last scope
+   :param script_data: str
+   :return clean script_data
+   """
+   start_index = script_data.find('{')
+   end_index = script_data.rfind('}')
+   if start_index == -1 or end_index == -1:
+      return None
+   return script_data[start_index:end_index + 1]
+
+
 def get_the_server_modules_list_in_(json_dict):
+    """
+    Find and return list with modules which are in ServerModules in json
+    :param json_dict: dict
+    :return done-marker and list with modules or list with key-path
+    """
     try:
         return True, json_dict[Key.modules_1][Key.modules_2][Key.modules_3][Key.modules_4]
     except:
@@ -45,6 +64,12 @@ def get_the_server_modules_list_in_(json_dict):
 
 
 def find_component_for_(key_component, server_modules_list):
+    """
+    Method for find component in modules by component name
+    :param key_component component name
+    :param server_modules_list source for finding
+    :return module-dict or none
+    """
     for s_module in server_modules_list:
         try:
             if s_module[Key.component_key] == key_component:
@@ -55,6 +80,11 @@ def find_component_for_(key_component, server_modules_list):
 
 
 def get_site(action_buttons):
+    """
+    Diving to site in dict-source
+    :param action_buttons: dict
+    :return str
+    """
     try:
         return action_buttons[Key.url_step1][Key.url_step2]
     except:
@@ -62,6 +92,9 @@ def get_site(action_buttons):
 
 
 def get_address_telephone_image(json_dict):
+    """Working with script where address, tel and image
+    :param json_dict
+    :return (dict, str,str)"""
     address = dict.fromkeys(['streetAddress', 'addressLocality', 'addressRegion', 'postalCode', 'addressCountry'], '')
     tel = ''
     image = ''
@@ -98,6 +131,11 @@ def get_address_telephone_image(json_dict):
 
 
 def get_email(json_dict):
+    """
+    Diving to email in dict-source
+    :param json_dict: dict
+    :return str
+    """
     try:
         email = json_dict[Key.email_step1][Key.email_step2][Key.email_step3][Key.email_step4][Key.email_step5]
         return email if email else ''
@@ -106,6 +144,11 @@ def get_email(json_dict):
 
 
 def get_bizid(json_dict):
+    """
+    Diving to id in dict-source
+    :param json_dict: dict
+    :return str
+    """
     try:
         return json_dict[Key.bizid_step1][Key.bizid_step2][Key.bizid_step3]
     except:
@@ -113,6 +156,11 @@ def get_bizid(json_dict):
 
 
 def get_amenities(json_dict):
+    """
+    Diving to amenities data in dict-source
+    :param json_dict: dict
+    :return list
+    """
     result = []
     try:
         amenities_list = json_dict[Key.amenities_step1][Key.amenities_step2][Key.amenities_step3][Key.amenities_step4][
@@ -134,6 +182,11 @@ def get_amenities(json_dict):
 
 
 def get_hours(json_dict):
+    """
+    Diving to hours in dict-source
+    :param json_dict: dict
+    :return str
+    """
     try:
         hours_list = json_dict[Key.hours_step1][Key.hours_step2][Key.hours_step3][Key.hours_step4][Key.hours_step5][
             0].values()
@@ -143,6 +196,11 @@ def get_hours(json_dict):
 
 
 def get_about_biz(json_dict):
+    """
+    Diving to data about biz in dict-source
+    :param json_dict: dict
+    :return str
+    """
     try:
         about_biz_dict = json_dict[Key.aboutbiz_step1][Key.aboutbiz_step2][Key.aboutbiz_step3]
     except:
@@ -160,4 +218,5 @@ def get_about_biz(json_dict):
 
 
 def get_url(url: str):
+    """Replace url from mobile to desktop"""
     return url.replace('m.yelp', 'www.yelp')

@@ -13,6 +13,11 @@ class YelpSpider(scrapy.Spider):
     allowed_domains = ['yelp.com']
 
     def __init__(self, url=None, file=None, *args, **kwargs):
+        """
+        Preparation url from command line or urls from file
+        @param url string from command line
+        @param file string from command line, absolute path to file
+        """
         super(YelpSpider, self).__init__(*args, **kwargs)
 
         self.urls = []
@@ -32,6 +37,7 @@ class YelpSpider(scrapy.Spider):
 
 
     def start_requests(self):
+        """Create requests"""
         for url in self.urls:
             yield scrapy.Request(url=url,
                                  callback=self.parse,
@@ -39,10 +45,12 @@ class YelpSpider(scrapy.Spider):
 
 
     def parse(self, response, **kwargs):
+        """Main method for collect all data and yield item"""
+
         item = YelpItem()
 
         # Dictionary from JSON
-        json_dict = make_dict_from_(response.text)
+        json_dict = get_dict_from_scriptjson(response.text)
         if not json_dict:
             self.logger.error(f'Problem with create dict from json\nURL:{response.url}')
             return
